@@ -2,6 +2,7 @@ oi
 ==
 python library for writing long running processes with a cli interface
 
+[![Build Status](https://travis-ci.org/walkr/oi.svg?branch=master)](https://travis-ci.org/walkr/oi)
 
 
 ### Usage
