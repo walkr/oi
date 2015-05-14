@@ -4,7 +4,7 @@ python library for writing long running processes with a cli interface
 
 
 
-## Usage
+### Usage
 
 ####1. Create new project
 
@@ -18,22 +18,24 @@ $ oi init
 ####2. Write your long running program
 
 ```python
-# program.py
+# programd.py
 
 import oi
 
-program = oi.Program('My sweet program', address='ipc:///tmp/myprogram.sock')
+program = oi.Program('my program', 'ipc:///tmp/program.sock')
+program.add_command('ping', lambda p: 'pong')
+program.add_command('state', lambda p: p.state)
 program.run()  # program will run forever
 ```
 
 ####3. Add a ctl interface
 
 ```python
-# programctl
+# programctl.py
 
 import oi
 
-ctl = oi.CtlProgram('ctl for my program', address='ipc:///tmp/myprogram.sock')
+ctl = oi.CtlProgram('ctl program', address='ipc:///tmp/program.sock')
 ctl.run()
 ```
 
@@ -45,7 +47,7 @@ $ python setup.py install
 
 ####5. Run program, then check ctl
 ```shell
-$ programd --config /etc/programd.conf
+$ programd --config /etc/program.conf
 
 $ programctl  # enter ctl loop
 programctl > ping
@@ -59,14 +61,14 @@ $ programctl ping # OR ping end exit
 # Help
 $ make help
 
-# Upload to pypi
+# Upload your program to pypi
 $ make distribute
 ```
 
-## Now the interesting bit. Are you ready?
-Run your program on one computer, then control from anywhere with a single line change (actually two).
+### Now the interesting bit. Are you ready?
+Run your program on one computer, then control it from another with a single line change (actually two).
 
-Just change the address `ipc:///tmp/program.sock` to a real `tcp://192.168.1.100:5000` in both your `programd` and `programctl`. That's it! (:
+Just change the address `ipc:///tmp/program.sock` to a tcp address, such as `tcp://192.168.1.100:5000` in both your `programd.py` and `programctl.py`. That's it! (:
 
 
 #### License
