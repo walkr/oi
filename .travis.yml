@@ -6,5 +6,15 @@ python:
   - "3.4"
   - "nightly"
 
+# install libnanomsg
+install:
+  - git clone --quiet --depth=100 "https://github.com/nanomsg/nanomsg.git" ~/builds/nanomsg
+      && pushd ~/builds/nanomsg
+      && ./autogen.sh
+      && ./configure
+      && make
+      && sudo make install
+      && popd;
+
 before_script: make install
 script:  LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib make test
