@@ -1,17 +1,12 @@
 import sys
 import argparse
 
-from nanoservice import Service, Client
+from nanoservice import Service
+from nanoservice import Client
 
 from . import version
 from . import worker
-
-try:
-    raw_input
-except NameError:
-    pass
-else:
-    input = raw_input
+from . import compat
 
 
 class Runner(object):
@@ -77,16 +72,23 @@ class Program(BaseProgram):
     def __init__(self, description, address):
         super(Program, self).__init__(description, address)
         self.service = Service(address) if address else None
+        self.commands = set()
 
         # Add additional arguments
         self.parser.add_argument(
             '--config', help='configuration file to use', nargs='?')
-        self.parser.add_argument(
-            '--daemonize', help='run program as daemon',
-            default=False, action='store_true')
+
+        if self.service is None:
+            return
 
         # Add default service worker, which will respond to ctl commands
         self.workers.append(worker.ServiceWorker(self.service))
+
+        # Add default commands
+        self.add_command(
+            'ping', lambda p: 'pong')
+        self.add_command(
+            'help', lambda p: 'commands: ' + ', '.join(p.commands))
 
     def add_command(self, command, function):
         """ Register a new function for command.
@@ -96,6 +98,7 @@ class Program(BaseProgram):
 
         fun = lambda: function(self)
         self.service.register(command, fun)
+        self.commands.add(command)
 
     def run(self, args=None):
         """ Run program. (If not supplied, parse program arguments)"""
@@ -107,20 +110,13 @@ class Program(BaseProgram):
             print(version.VERSION)
             sys.exit(0)
 
-        if args.config is None:
-            self.parser.print_usage()
-            sys.exit(0)
+        # Read configuration file if any
+        if args.config is not None:
+            self.config = args.config
 
-        if args.daemonize:
-            # TODO: Implement this
-            pass
-
-        for w in self.workers:
-            w.start()
-
-        # Wait on workers to complete
-        for w in self.workers:
-            w.join()
+        # Start workers then wait until they finish work
+        [w.start() for w in self.workers]
+        [w.join() for w in self.workers]
 
 
 class CtlProgram(BaseProgram):
@@ -152,7 +148,7 @@ class CtlProgram(BaseProgram):
         """ Enter a loop, read user input then run """
 
         while True:
-            command = input('ctl > ')
+            command = compat.input('ctl > ')
             command = command.strip().lower()
             if command == 'quit':
                 sys.exit(0)
