@@ -6,4 +6,4 @@ except NameError:
 try:
     import configparser
 except ImportError:
-    import ConfigParsers as configparser
+    import ConfigParser as configparser
