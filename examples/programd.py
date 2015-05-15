@@ -1,6 +1,11 @@
 import oi
 
-program = oi.Program('my program', 'ipc:///tmp/program.sock')
-program.add_command('ping', lambda p: 'pong')
-program.add_command('state', lambda p: p.state)
-program.run()
+
+def main():
+    program = oi.Program('my program', 'ipc:///tmp/programd.sock')
+    program.add_command('ping', lambda p: 'pong')
+    program.add_command('state', lambda p: p.state)
+    program.run()
+
+if __name__ == '__main__':
+    main()
