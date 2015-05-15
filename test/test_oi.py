@@ -9,6 +9,10 @@ class TestOi(unittest.TestCase):
         self.p = oi.Program('programd', self.address)
         self.ctl = oi.CtlProgram('programctl', self.address)
 
+    def tearDown(self):
+        self.p.service.sock.close()
+        self.ctl.client.sock.close()
+
     # --------------------------------------
 
     def test_new_program(self):
