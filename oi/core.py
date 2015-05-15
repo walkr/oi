@@ -10,21 +10,6 @@ from . import worker
 from . import compat
 
 
-class Runner(object):
-    """ A Runner is a simple object which maps command names to functions """
-
-    def __init__(self, methods=None):
-        self.methods = methods or {}
-
-    def add(self, command, function):
-        """ Register a new function for `command` """
-        self.methods[command] = function
-
-    def run(self, command, *args):
-        """ Run function for `command` with `args` """
-        self.methods[command](*args)
-
-
 class State(dict):
     """ A dot access dictionary """
 
@@ -51,7 +36,6 @@ class BaseProgram(object):
         self.description = description
         self.address = address
         self.parser = self.new_parser()
-        self.runner = Runner()
         self.state = state or State()
         self.workers = workers or []
 
@@ -138,10 +122,6 @@ class CtlProgram(BaseProgram):
             'command', help='command name to execute', nargs='?',
             metavar='command')
 
-    def execute(self, command):
-        """ Execute a command """
-        self.call(command)
-
     def call(self, command, *args):
         """ Execute remote command and show result """
 
@@ -168,7 +148,7 @@ class CtlProgram(BaseProgram):
 
         # Execute a single command then exit
         if args.command is not None:
-            self.execute(args.command)
+            self.call(args.command)
             sys.exit(0)
 
         # Enter command loop
