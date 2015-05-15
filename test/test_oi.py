@@ -31,3 +31,7 @@ class TestOi(unittest.TestCase):
         self.assertEqual(dest, 'local')
         self.assertEqual(res, 'test')
         self.assertIsNone(err)
+
+    def test_parse_config(self):
+        c = self.p.parse_config('./test/test_config.conf')
+        self.assertTrue('repo.01' in c.sections())
