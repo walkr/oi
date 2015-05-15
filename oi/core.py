@@ -116,20 +116,49 @@ class CtlProgram(BaseProgram):
     def __init__(self, description, address):
         super(CtlProgram, self).__init__(description, address)
         self.client = Client(address) if address else None
+        self.locals = {}  # local commands
 
         # Add command argument
         self.parser.add_argument(
             'command', help='command name to execute', nargs='?',
             metavar='command')
 
-    def call(self, command, *args):
-        """ Execute remote command and show result """
+        # Add default commands
+        self.add_command('quit', lambda p: sys.exit(0))
 
-        res, err = self.client.call(command, *args)
-        if err:
-            print('program err: {}'.format(err))
-        else:
+    def add_command(self, command, function):
+        """ Add local command """
+        self.locals[command] = function
+
+    def call(self, command, *args):
+        """ Execute local OR remote command and show result """
+
+        if not command:
+            return
+
+        res, err = None, None
+
+        # Try local first
+        try:
+            res = self.locals[command](self, *args)
+        except KeyError:
+
+            # Execute remote command
+            res, err = self.client.call(command, *args)
+            return 'remote', res, err
+
+        except Exception as e:
+            return 'local', res, str(e)
+
+        return 'local', res, err
+
+    def show(self, dest, res, err):
+        """ Show result OR error """
+        if res:
             print(res)
+
+        elif err is not None:
+            print('{} err: {}'.format(dest, err))
 
     def loop(self):
         """ Enter a loop, read user input then run """
@@ -137,9 +166,10 @@ class CtlProgram(BaseProgram):
         while True:
             command = compat.input('ctl > ')
             command = command.strip().lower()
-            if command == 'quit':
-                sys.exit(0)
-            self.call(command)
+            if not command:
+                continue
+            dest, res, err = self.call(command)
+            self.show(dest, res, err)
 
     def run(self, args=None, loop=True):
 
@@ -148,7 +178,8 @@ class CtlProgram(BaseProgram):
 
         # Execute a single command then exit
         if args.command is not None:
-            self.call(args.command)
+            dest, res, err = self.call(args.command)
+            self.show(dest, res, err)
             sys.exit(0)
 
         # Enter command loop
