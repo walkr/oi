@@ -19,7 +19,7 @@ test:
 	@python -m unittest discover -s test
 
 clean:
-	@rm -rf build dist oi.egg-info
+	@rm -rf build dist *.egg-info
 
 distribute:
 	@python setup.py register -r pypi && python setup.py sdist upload -r pypi
