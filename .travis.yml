@@ -6,6 +6,9 @@ python:
   - "3.4"
   - "nightly"
 
+git:
+  submodules: false
+
 # install libnanomsg
 install:
   - git clone --quiet --depth=100 "https://github.com/nanomsg/nanomsg.git" ~/builds/nanomsg
