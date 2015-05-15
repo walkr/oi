@@ -44,12 +44,24 @@ pong
 $ python programctl ping # OR ping end exit
 ```
 
-#### Also, check out the makefile
-```shell
-# Help
-$ make help
+#### Quickly get started with a new project
 
-# Upload your program to pypi
+```shell
+$ mkdir xprogram
+$ cd xprogram
+
+$ oit init
+$ make install
+
+# Start your program
+$ xprogramd
+
+# Start ctl program
+$ xprogramctl
+ctl > ping
+pong
+
+# Upload to pypi (Edit setup.py before distributing)
 $ make distribute
 ```
 
@@ -58,6 +70,8 @@ Run your program on one computer, then control it from another with a single lin
 
 Just change the address `ipc:///tmp/program.sock` to a tcp address, such as `tcp://192.168.1.100:5000` in both your `programd.py` and `programctl.py`. That's it! (:
 
+#### TODO
+[ ] Add more testing
 
 #### License
 
