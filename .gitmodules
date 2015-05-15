@@ -1,0 +1,3 @@
+[submodule "example/hn"]
+	path = example/hn
+	url = git@github.com:walkr/hn.git
