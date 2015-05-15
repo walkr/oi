@@ -1,7 +1,12 @@
 import threading
 
 
-class ServiceWorker(threading.Thread):
+class Worker(threading.Thread):
+    def run(self):
+        raise Exception('Implement this method in your subclass')
+
+
+class ServiceWorker(Worker):
     """ Respond to commands from ctl program """
 
     def __init__(self, service, **kwargs):
@@ -10,13 +15,3 @@ class ServiceWorker(threading.Thread):
 
     def run(self):
         self.service.start()
-
-
-class Worker(threading.Thread):
-    """ Another thread for performing work """
-
-    def run(self):
-        import time
-        while True:
-            print('Inside worker ...')
-            time.sleep(0.5)
