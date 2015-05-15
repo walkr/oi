@@ -190,10 +190,13 @@ class CtlProgram(BaseProgram):
     def parse_input(self, text):
         """ Parse ctl user input """
 
-        text = text.strip().lower()
+        text = text.strip()
         parts = text.split(' ')
+
         command = parts[0] if text and parts else None
+        command = command.lower() if command else None
         args = parts[1:] if len(parts) > 1 else []
+
         return (command, args)
 
     def loop(self):
