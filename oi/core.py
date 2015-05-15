@@ -1,4 +1,3 @@
-import os
 import sys
 import argparse
 
@@ -6,6 +5,13 @@ from nanoservice import Service, Client
 
 from . import version
 from . import worker
+
+try:
+    raw_input
+except NameError:
+    pass
+else:
+    input = raw_input
 
 
 class Runner(object):
