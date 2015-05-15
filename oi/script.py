@@ -175,6 +175,10 @@ def init_new_project(program):
     with open(os.path.join(src_dir, 'version.py'), 'w') as fh:
         fh.write("VERSION = '0.0.1'")
 
+    # Add __init__ file
+    with open(os.path.join(src_dir, '__init__.py'), 'w') as fh:
+        pass
+
 
 def main():
     program = core.CtlProgram(
