@@ -4,6 +4,9 @@ python library for writing long running processes with a cli interface
 
 [![Build Status](https://travis-ci.org/walkr/oi.svg?branch=master)](https://travis-ci.org/walkr/oi)
 
+[![oi image](http://imgur.com/dxSzpPh)]
+
+
 
 ### Usage
 
@@ -71,7 +74,8 @@ Run your program on one computer, then control it from another with a single lin
 Just change the address `ipc:///tmp/program.sock` to a tcp address, such as `tcp://192.168.1.100:5000` in both your `programd.py` and `programctl.py`. That's it! (:
 
 #### TODO
-[ ] Add more testing
+
+* Add more testing
 
 #### License
 
