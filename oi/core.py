@@ -10,23 +10,25 @@ from . import worker
 from . import compat
 
 
+lock = threading.Lock()
+
+
 class State(dict):
     """ A dot access dictionary """
 
     def __init__(self, *args, **kwargs):
         super(State, self).__init__(self, *args, **kwargs)
-        self.lock = threading.Lock()
 
-    def getattr(self, key):
+    def __getattr__(self, key):
         try:
-            return self['key']
+            return self[key]
         except KeyError:
             raise AttributeError
 
-    def setattr(self, key, value):
-        self.lock.acquire()
+    def __setattr__(self, key, value):
+        lock.acquire()
         self[key] = value
-        self.lock.release()
+        lock.release()
 
 
 class BaseProgram(object):
@@ -38,6 +40,7 @@ class BaseProgram(object):
         self.parser = self.new_parser()
         self.state = state or State()
         self.workers = workers or []
+        self.registered = {}  # registered commands
 
     def new_parser(self):
         """ Create argument parser with some defaults """
@@ -47,6 +50,13 @@ class BaseProgram(object):
             '--version', help='show version and exit',
             default=False, action='store_true')
         return parser
+
+    def add_command(self, command, function, description=None):
+        """ Add local command """
+
+        self.registered[command] = {
+            'function': function, 'description': description
+        }
 
     def run(self, args=None):
         """ Parse arguments if necessary then run program """
@@ -62,9 +72,9 @@ class Program(BaseProgram):
 
     def __init__(self, description, address):
         super(Program, self).__init__(description, address)
+
         self.service = Service(address) if address else None
-        self.commands = set()
-        self.config = None
+        self.config = {}
 
         # Add additional arguments
         self.parser.add_argument(
@@ -77,20 +87,21 @@ class Program(BaseProgram):
         self.workers.append(worker.ServiceWorker(self.service))
 
         # Add default commands
-        self.add_command(
-            'ping', lambda p: 'pong')
-        self.add_command(
-            'help', lambda p: 'commands: ' + ', '.join(p.commands))
+        self.add_command('ping', lambda: 'pong')
+        self.add_command('help', self.help_function)
 
-    def add_command(self, command, function):
-        """ Register a new function for command.
+    def help_function(self, command=None):
+        """ Show help for all or a single command """
+        if command:
+            return self.registered[command].get(
+                'description', 'No help available'
+            )
+        return ', '.join(self.registered)
 
-        The `function` must accept a single argument,
-        which will be the current program instance """
-
-        fun = lambda: function(self)
-        self.service.register(command, fun)
-        self.commands.add(command)
+    def add_command(self, command, function, description=None):
+        """ Register a new function for command """
+        super(Program, self).add_command(command, function, description)
+        self.service.register(command, function)
 
     def parse_config(self, filepath):
         """ Parse configuration file """
@@ -119,12 +130,24 @@ class Program(BaseProgram):
 
 
 class CtlProgram(BaseProgram):
-    """ The Ctl program """
+    """ The Ctl program
+
+    Note:
+
+        When a CtlProgram accepts a command it will make a request
+        to the remote service with that command and any args extracted.
+
+        When we add commands via `add_command` method, then those
+        commands will be executed by our registered function; they will
+        be not dispatched to the remote service. This is helpfull, because
+        it allows us to register certain local commands, such as `quit`, etc
+
+     """
 
     def __init__(self, description, address):
         super(CtlProgram, self).__init__(description, address)
+
         self.client = Client(address) if address else None
-        self.locals = {}  # local commands
 
         # Add command argument
         self.parser.add_argument(
@@ -132,11 +155,7 @@ class CtlProgram(BaseProgram):
             metavar='command')
 
         # Add default commands
-        self.add_command('quit', lambda p: sys.exit(0))
-
-    def add_command(self, command, function):
-        """ Add local command """
-        self.locals[command] = function
+        self.add_command('quit', lambda p: sys.exit(0), 'quit ctl')
 
     def call(self, command, *args):
         """ Execute local OR remote command and show result """
@@ -148,7 +167,7 @@ class CtlProgram(BaseProgram):
 
         # Try local first
         try:
-            res = self.locals[command](self, *args)
+            res = self.registered[command]['function'](self, *args)
         except KeyError:
 
             # Execute remote command
@@ -168,15 +187,24 @@ class CtlProgram(BaseProgram):
         elif err is not None:
             print('{} err: {}'.format(dest, err))
 
+    def parse_input(self, text):
+        """ Parse ctl user input """
+
+        text = text.strip().lower()
+        parts = text.split(' ')
+        command = parts[0] if text and parts else None
+        args = parts[1:] if len(parts) > 1 else []
+        return (command, args)
+
     def loop(self):
         """ Enter a loop, read user input then run """
 
         while True:
-            command = compat.input('ctl > ')
-            command = command.strip().lower()
+            text = compat.input('ctl > ')
+            command, args = self.parse_input(text)
             if not command:
                 continue
-            dest, res, err = self.call(command)
+            dest, res, err = self.call(command, *args)
             self.show(dest, res, err)
 
     def run(self, args=None, loop=True):
@@ -186,7 +214,8 @@ class CtlProgram(BaseProgram):
 
         # Execute a single command then exit
         if args.command is not None:
-            dest, res, err = self.call(args.command)
+            command, args = self.parse_input(args.command)
+            dest, res, err = self.call(command, *args)
             self.show(dest, res, err)
             sys.exit(0)
 

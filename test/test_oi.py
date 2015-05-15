@@ -35,3 +35,13 @@ class TestOi(unittest.TestCase):
     def test_parse_config(self):
         c = self.p.parse_config('./test/test_config.conf')
         self.assertTrue('repo.01' in c.sections())
+
+
+class TestState(unittest.TestCase):
+
+    def setUp(self):
+        self.state = oi.State()
+
+    def test_set_get(self):
+        self.state.hello = 'world'
+        self.assertEqual(self.state.hello, 'world')
