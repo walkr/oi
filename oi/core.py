@@ -1,5 +1,6 @@
 import sys
 import argparse
+import threading
 
 from nanoservice import Service
 from nanoservice import Client
@@ -27,6 +28,10 @@ class Runner(object):
 class State(dict):
     """ A dot access dictionary """
 
+    def __init__(self, *args, **kwargs):
+        super(State, self).__init__(self, *args, **kwargs)
+        self.lock = threading.Lock()
+
     def getattr(self, key):
         try:
             return self['key']
@@ -34,7 +39,9 @@ class State(dict):
             raise AttributeError
 
     def setattr(self, key, value):
+        self.lock.acquire()
         self[key] = value
+        self.lock.release()
 
 
 class BaseProgram(object):
