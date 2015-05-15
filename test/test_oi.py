@@ -5,9 +5,17 @@ import oi
 class TestOi(unittest.TestCase):
 
     def setUp(self):
-        address = None
-        p = oi.Program('test program', address)
-        c = oi.CtlProgram('test program ctl', address)
+        self.address = 'ipc:///tmp/test-programd.sock'
+        self.p = oi.Program('programd', self.address)
+        self.ctl = oi.CtlProgram('programctl', self.address)
 
-    def test(self):
-        self.assertTrue(True)
+    # --------------------------------------
+
+    def test_new_program(self):
+        self.assertIsNotNone(self.p)
+
+    def test_new_ctl(self):
+        self.assertIsNotNone(self.ctl)
+
+    def test_add_command(self):
+        self.p.add_command('test', lambda p: 'test')
