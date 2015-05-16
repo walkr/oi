@@ -85,7 +85,7 @@ class Program(BaseProgram):
         super(Program, self).__init__(description, address)
 
         self.service = Service(address) if address else None
-        self.config = {}
+        self.config = compat.configparser.ConfigParser()
 
         # Add the flag for parsing configuration file
         self.parser.add_argument(
@@ -116,13 +116,6 @@ class Program(BaseProgram):
         super(Program, self).add_command(command, function, description)
         self.service.register(command, function)
 
-    def parse_config(self, filepath):
-        """ Read configuration data from file located at `filepath`"""
-
-        config = compat.configparser.ConfigParser()
-        config.read(filepath)
-        return config
-
     def run(self, args=None):
         """ Parse comand line arguments/flags and run program """
 
@@ -131,7 +124,8 @@ class Program(BaseProgram):
 
         # Read configuration file if any
         if args.config is not None:
-            self.config = self.parse_config(args.config)
+            filepath = args.config
+            self.config.read(filepath)
 
         # Start workers then wait until they finish work
         [w.start() for w in self.workers]

@@ -33,8 +33,11 @@ class TestOi(unittest.TestCase):
         self.assertIsNone(err)
 
     def test_parse_config(self):
-        c = self.p.parse_config('./test/test_config.conf')
+        self.p.config.read('./test/test_config.conf')
+        c = self.p.config
         self.assertTrue('repo.01' in c.sections())
+        self.assertEqual(c.get('repo.01', 'user'), 'abc')
+        self.assertEqual(c.getint('repo.01', 'port'), 1234)
 
 
 class TestState(unittest.TestCase):
