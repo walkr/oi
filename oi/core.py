@@ -43,7 +43,10 @@ class BaseProgram(object):
         self.registered = {}  # registered commands
 
     def new_parser(self):
-        """ Create argument parser with some defaults """
+        """ Create a command line argument parser
+
+        Add a few default flags, such as --version
+        for displaying the program version when invoked """
 
         parser = argparse.ArgumentParser(description=self.description)
         parser.add_argument(
@@ -52,14 +55,19 @@ class BaseProgram(object):
         return parser
 
     def add_command(self, command, function, description=None):
-        """ Add local command """
+        """ Register a new function with a the name `command` and
+        `description` (which will be shown then help is invoked). """
 
         self.registered[command] = {
             'function': function, 'description': description
         }
 
     def run(self, args=None):
-        """ Parse arguments if necessary then run program """
+        """ Parse command line arguments if necessary then run program.
+        By default this method will just take of the --version flag.
+
+        The logic for other flags should be handled by your subclass """
+
         args = args or self.parser.parse_args()
 
         if args.version:
@@ -68,7 +76,10 @@ class BaseProgram(object):
 
 
 class Program(BaseProgram):
-    """ Long running program with a nanoservice endpoint """
+    """ Long running program with a nanoservice endpoint.
+
+    `service` - nanoservice Service object
+    `config` - the configuration parsed from --config <filepath> """
 
     def __init__(self, description, address):
         super(Program, self).__init__(description, address)
@@ -76,7 +87,7 @@ class Program(BaseProgram):
         self.service = Service(address) if address else None
         self.config = {}
 
-        # Add additional arguments
+        # Add the flag for parsing configuration file
         self.parser.add_argument(
             '--config', help='configuration file to use', nargs='?')
 
@@ -84,6 +95,8 @@ class Program(BaseProgram):
             return
 
         # Add default service worker, which will respond to ctl commands
+        # Other workers will perform other kind of work, such as
+        # fetching resources from the web, etc
         self.workers.append(worker.ServiceWorker(self.service))
 
         # Add default commands
@@ -91,7 +104,7 @@ class Program(BaseProgram):
         self.add_command('help', self.help_function)
 
     def help_function(self, command=None):
-        """ Show help for all or a single command """
+        """ Show help for all available commands or just a single one """
         if command:
             return self.registered[command].get(
                 'description', 'No help available'
@@ -104,21 +117,17 @@ class Program(BaseProgram):
         self.service.register(command, function)
 
     def parse_config(self, filepath):
-        """ Parse configuration file """
+        """ Read configuration data from file located at `filepath`"""
 
         config = compat.configparser.ConfigParser()
         config.read(filepath)
         return config
 
     def run(self, args=None):
-        """ Run program. (If not supplied, parse program arguments)"""
+        """ Parse comand line arguments/flags and run program """
 
         args = args or self.parser.parse_args()
         super(Program, self).run(args)
-
-        if args.version:
-            print(version.VERSION)
-            sys.exit(0)
 
         # Read configuration file if any
         if args.config is not None:
@@ -139,7 +148,7 @@ class CtlProgram(BaseProgram):
 
         When we add commands via `add_command` method, then those
         commands will be executed by our registered function; they will
-        be not dispatched to the remote service. This is helpfull, because
+        be not dispatched to the remote service. This is helpful, because
         it allows us to register certain local commands, such as `quit`, etc
 
      """
@@ -151,7 +160,7 @@ class CtlProgram(BaseProgram):
 
         # Add command argument
         self.parser.add_argument(
-            'command', help='command name to execute', nargs='?',
+            'command', help='command name to execute', nargs='*',
             metavar='command')
 
         # Add default commands
@@ -200,7 +209,7 @@ class CtlProgram(BaseProgram):
         return (command, args)
 
     def loop(self):
-        """ Enter a loop, read user input then run """
+        """ Enter loop, read user input then run command. Repeat """
 
         while True:
             text = compat.input('ctl > ')
@@ -216,8 +225,12 @@ class CtlProgram(BaseProgram):
         super(CtlProgram, self).run(args)
 
         # Execute a single command then exit
-        if args.command is not None:
-            command, args = self.parse_input(args.command)
+        if args.command:
+            # command will come as a list (zero or more elements)
+            # so, extract the first element as the command name
+            # and the rest will all be positional arguments
+            command = args.command[0]
+            args = args.command[1:] if len(args.command) > 1 else []
             dest, res, err = self.call(command, *args)
             self.show(dest, res, err)
             sys.exit(0)
