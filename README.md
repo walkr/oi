@@ -53,7 +53,7 @@ $ python programctl ping # OR ping end exit
 $ mkdir xprogram
 $ cd xprogram
 
-$ oit init
+$ oi init
 $ make install
 
 # Start your program
