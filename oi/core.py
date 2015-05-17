@@ -1,6 +1,7 @@
 import sys
 import argparse
 import threading
+import logging
 
 from nanoservice import Service
 from nanoservice import Client
@@ -52,6 +53,9 @@ class BaseProgram(object):
         parser.add_argument(
             '--version', help='show version and exit',
             default=False, action='store_true')
+        parser.add_argument(
+            '--debug', help='enable debugging',
+            default=False, action='store_true')
         return parser
 
     def add_command(self, command, function, description=None):
@@ -69,6 +73,9 @@ class BaseProgram(object):
         The logic for other flags should be handled by your subclass """
 
         args = args or self.parser.parse_args()
+
+        if args.debug:
+            logging.basicConfig(level=logging.DEBUG)
 
         if args.version:
             print(version.VERSION)
