@@ -35,7 +35,7 @@ install:
     @python setup.py install
 
 test:
-    @python -m unittest discover -s test
+    @nosetests test
 
 clean:
     @rm -rf build dist *.egg-info

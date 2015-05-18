@@ -33,6 +33,7 @@ setup(
     description='A library for writing long running processes with a cli interface',
     long_description=long_description,
     install_requires=[
+        'nose',
         'nanoservice',
     ],
     classifiers=[
