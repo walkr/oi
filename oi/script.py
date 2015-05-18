@@ -173,7 +173,7 @@ def init_new_project(program):
 
     # Add version file
     with open(os.path.join(src_dir, 'version.py'), 'w') as fh:
-        fh.write("VERSION = '0.0.1'")
+        fh.write("VERSION = '0.0.1\n'")
 
     # Add __init__ file
     with open(os.path.join(src_dir, '__init__.py'), 'w') as fh:
