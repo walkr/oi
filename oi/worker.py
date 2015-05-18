@@ -2,6 +2,12 @@ import threading
 
 
 class Worker(threading.Thread):
+    """ General purpose worker """
+
+    def __init__(self, program=None, **kwargs):
+        super(Worker, self).__init__(**kwargs)
+        self.program = program
+
     def run(self):
         raise Exception('Implement this method in your subclass')
 
