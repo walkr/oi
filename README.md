@@ -19,8 +19,8 @@ python library for writing long running processes with a cli interface
 import oi
 
 program = oi.Program('my program', 'ipc:///tmp/program.sock')
-program.add_command('ping', lambda p: 'pong')
-program.add_command('state', lambda p: p.state)
+program.add_command('ping', lambda: 'pong')
+program.add_command('state', lambda: program.state)
 program.run()  # program will run forever
 ```
 
@@ -38,13 +38,18 @@ ctl.run()
 
 ####3. Run program, then connect to it via ctl
 ```shell
+# Run process
+$ python programd
+
+# OR with a configuration file
 $ python programd --config /etc/program.conf
 
 $ python programctl  # enter ctl loop
 programctl > ping
 pong
 
-$ python programctl ping # OR ping end exit
+# OR ping end exit
+$ python programctl ping
 ```
 
 #### Quickly get started with a new project
@@ -75,7 +80,7 @@ Just change the address `ipc:///tmp/program.sock` to a tcp address, such as `tcp
 
 #### TODO
 
-* Add more testing
+- [ ] Add more testing
 
 #### License
 
