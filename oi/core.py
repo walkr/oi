@@ -9,7 +9,7 @@ from nanoservice import Client
 from . import version
 from . import worker
 from . import compat
-
+from . import util
 
 lock = threading.Lock()
 
@@ -198,11 +198,10 @@ class CtlProgram(BaseProgram):
             print('{} err: {}'.format(dest, err))
 
     def parse_input(self, text):
-        """ Parse ctl user input """
+        """ Parse ctl user input. Double quotes are used
+        to group together multi words arguments. """
 
-        text = text.strip()
-        parts = text.split(' ')
-
+        parts = util.split(text)
         command = parts[0] if text and parts else None
         command = command.lower() if command else None
         args = parts[1:] if len(parts) > 1 else []

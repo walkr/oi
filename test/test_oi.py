@@ -39,6 +39,15 @@ class TestOi(unittest.TestCase):
         self.assertEqual(c.get('repo.01', 'user'), 'abc')
         self.assertEqual(c.getint('repo.01', 'port'), 1234)
 
+    def test_parse_input(self):
+        tests = [
+            (' 1 2 "3 4" 5 "6 7"', ('1', ['2', '3 4', '5', '6 7'])),
+            ('ping', ('ping', []))
+        ]
+        for text, expected in tests:
+            res = self.ctl.parse_input(text)
+            self.assertEqual(res, expected)
+
 
 class TestState(unittest.TestCase):
 
