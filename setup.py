@@ -33,7 +33,7 @@ def read_long_description(readme_file):
 
 def read_version():
     """ Read package version """
-    with open('./nanoservice/version.py') as fh:
+    with open('./oi/version.py') as fh:
         for line in fh:
             if line.startswith('VERSION'):
                 return line.split('=')[1].strip().strip("'")
@@ -62,5 +62,4 @@ setup(
             'oi = oi.script:main',
         ],
     },
-
 )
