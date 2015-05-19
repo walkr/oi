@@ -6,11 +6,17 @@ def main():
 
     program.add_command(
         'ping', lambda: 'pong')
+
     program.add_command(
         'state', lambda: program.state, 'show program state')
+
     program.add_command(
-        'touch', lambda: setattr(program.state, 'touch', True) and True,
-        'touch state')
+        'store', lambda key, val: setattr(program.state, key, val) and True,
+        'store an item')
+
+    program.add_command(
+        'get', lambda key: getattr(program.state, key, None),
+        'get an item')
 
     program.run()
 
