@@ -51,7 +51,11 @@ setup(
     long_description=read_long_description(readme_file),
     install_requires=[
         'nose',
+        'nanomsg',
         'nanoservice',
+    ],
+    dependency_links=[
+        'git+https://github.com/tonysimpson/nanomsg-python.git@master#egg=nanomsg',
     ],
     classifiers=[
         'License :: OSI Approved :: MIT License',
