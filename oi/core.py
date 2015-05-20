@@ -1,6 +1,7 @@
 import sys
 import argparse
 import threading
+import readline
 import logging
 
 from nanoservice import Service
