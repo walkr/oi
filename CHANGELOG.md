@@ -1,6 +1,11 @@
 Changelog
 ==========
 
+### 0.4.1
+
+* By default only display colored output only if the ctl process
+  connects to multiple endpoints
+
 ### 0.4.0
 
 * Add colored output

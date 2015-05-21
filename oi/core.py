@@ -207,7 +207,7 @@ class Response(object):
         self.err = err
         self.multi = multi
 
-    def _show(self, res, err, prefix=''):
+    def _show(self, res, err, prefix='', colored=False):
         """ Show result or error """
 
         if self.kind is 'local':
@@ -216,17 +216,23 @@ class Response(object):
             return
 
         if self.kind is 'remote':
-            if err:
-                what = prefix + Fore.RED + 'remote err: {}'.format(err) + Fore.RESET
+            if colored:
+                red, green, reset = Fore.RED, Fore.GREEN, Fore.RESET
             else:
-                what = prefix + Fore.GREEN + str(res) + Fore.RESET
+                red = green = reset = ''
+            if err:
+                what = prefix + red + 'remote err: {}'.format(err) + reset
+            else:
+                what = prefix + green + str(res) + reset
             print(what)
 
     def show(self):
         if self.multi:
             for addr in self.res:
                 self._show(
-                    self.res[addr], self.err[addr], prefix='- {}: '.format(addr))
+                    self.res[addr], self.err[addr],
+                    prefix='- {}: '.format(addr), colored=True
+                )
             return
         self._show(self.res, self.err)
 
