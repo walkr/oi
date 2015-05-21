@@ -53,6 +53,7 @@ setup(
         'nose',
         'nanomsg',
         'nanoservice',
+        'colorama',
     ],
     dependency_links=[
         'git+https://github.com/tonysimpson/nanomsg-python.git@master#egg=nanomsg',

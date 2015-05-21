@@ -4,6 +4,7 @@ import threading
 import readline
 import logging
 
+from colorama import Fore
 from nanoservice import Service
 from nanoservice import Client
 
@@ -117,7 +118,7 @@ class Program(BaseProgram):
             return self.registered[command].get(
                 'description', 'No help available'
             )
-        return ', '.join(self.registered)
+        return ', '.join(sorted(self.registered))
 
     def add_command(self, command, function, description=None):
         """ Register a new function for command """
@@ -140,6 +141,96 @@ class Program(BaseProgram):
         [w.join() for w in self.workers]
 
 
+class ClientWrapper(object):
+    """ An wrapper over nanoservice.Client to deal with one or multiple
+    clients in a similar fasion """
+
+    def __init__(self, address, timeout):
+        self.c = self.create_client(address, timeout)
+
+    def create_client(self, addr, timeout):
+        """ Create client(s) based on addr """
+
+        def make(addr):
+            c = Client(addr)
+            c.sock._set_recv_timeout(timeout)
+            return c
+
+        if ',' in addr:
+            addrs = addr.split(',')
+            addrs = [a.strip() for a in addrs]
+            return {a: make(a) for a in addrs}
+        return make(addr)
+
+    def _call_single(self, client, command, *args):
+        """ Call single """
+        try:
+            return client.call(command, *args)
+        except Exception as e:
+            return None, str(e)
+
+    def _call_multi(self, clients, command, *args):
+        """ Call multi """
+        responses, errors = {}, {}
+        for addr, client in clients.items():
+            res, err = self._call_single(client, command, *args)
+            responses[addr] = res
+            errors[addr] = err
+        return responses, errors
+
+    def call(self, command, *args):
+        """ Call remote service(s) """
+        if isinstance(self.c, dict):
+            return self._call_multi(self.c, command, *args)
+        return self._call_single(self.c, command, *args)
+
+    def is_multi(self):
+        """ Does this object include multiple clients """
+        return isinstance(self.c, dict)
+
+    def close(self):
+        """ Close socket(s) """
+        if isinstance(self.c, dict):
+            for client in self.c.values():
+                client.sock.close()
+            return
+        self.c.sock.close()
+
+
+class Response(object):
+    """ A local or remote response for a command """
+
+    def __init__(self, kind, res, err, multi=False):
+        super(Response, self).__init__()
+        self.kind = kind
+        self.res = res
+        self.err = err
+        self.multi = multi
+
+    def _show(self, res, err, prefix=''):
+        """ Show result or error """
+
+        if self.kind is 'local':
+            what = res if not err else err
+            print(what)
+            return
+
+        if self.kind is 'remote':
+            if err:
+                what = prefix + Fore.RED + 'remote err: {}'.format(err) + Fore.RESET
+            else:
+                what = prefix + Fore.GREEN + str(res) + Fore.RESET
+            print(what)
+
+    def show(self):
+        if self.multi:
+            for addr in self.res:
+                self._show(
+                    self.res[addr], self.err[addr], prefix='- {}: '.format(addr))
+            return
+        self._show(self.res, self.err)
+
+
 class CtlProgram(BaseProgram):
     """ The Ctl program
 
@@ -155,10 +246,9 @@ class CtlProgram(BaseProgram):
 
      """
 
-    def __init__(self, description, address):
+    def __init__(self, description, address, timeout=3000):
         super(CtlProgram, self).__init__(description, address)
-
-        self.client = Client(address) if address else None
+        self.client = ClientWrapper(address, timeout) if address else None
 
         # Add command argument
         self.parser.add_argument(
@@ -169,34 +259,25 @@ class CtlProgram(BaseProgram):
         self.add_command('quit', lambda p: sys.exit(0), 'quit ctl')
 
     def call(self, command, *args):
-        """ Execute local OR remote command and show result """
+        """ Execute local OR remote command and show response """
 
         if not command:
             return
 
-        res, err = None, None
-
-        # Try local first
+        # Look for local methods first
         try:
             res = self.registered[command]['function'](self, *args)
+
+        # Method not found, try remote
         except KeyError:
 
             # Execute remote command
             res, err = self.client.call(command, *args)
-            return 'remote', res, err
+            return Response('remote', res, err, self.client.is_multi())
 
+        # Local exception
         except Exception as e:
-            return 'local', res, str(e)
-
-        return 'local', res, err
-
-    def show(self, dest, res, err):
-        """ Show result OR error """
-        if res:
-            print(res)
-
-        elif err is not None:
-            print('{} err: {}'.format(dest, err))
+            return Response('local', res, str(e))
 
     def parse_input(self, text):
         """ Parse ctl user input. Double quotes are used
@@ -217,8 +298,8 @@ class CtlProgram(BaseProgram):
             command, args = self.parse_input(text)
             if not command:
                 continue
-            dest, res, err = self.call(command, *args)
-            self.show(dest, res, err)
+            response = self.call(command, *args)
+            response.show()
 
     def run(self, args=None, loop=True):
 
@@ -232,8 +313,8 @@ class CtlProgram(BaseProgram):
             # and the rest will all be positional arguments
             command = args.command[0]
             args = args.command[1:] if len(args.command) > 1 else []
-            dest, res, err = self.call(command, *args)
-            self.show(dest, res, err)
+            response = self.call(command, *args)
+            response.show()
             sys.exit(0)
 
         # Enter command loop

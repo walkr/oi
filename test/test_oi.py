@@ -11,7 +11,7 @@ class TestOi(unittest.TestCase):
 
     def tearDown(self):
         self.p.service.sock.close()
-        self.ctl.client.sock.close()
+        self.ctl.client.close()
 
     # --------------------------------------
 
