@@ -267,6 +267,7 @@ class CtlProgram(BaseProgram):
         # Look for local methods first
         try:
             res = self.registered[command]['function'](self, *args)
+            return Response('local', res, None)
 
         # Method not found, try remote
         except KeyError:

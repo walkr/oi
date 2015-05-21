@@ -26,11 +26,12 @@ class TestOi(unittest.TestCase):
 
     def test_add_local_command_for_ctl(self):
         self.ctl.add_command('test', lambda p: 'test')
-        dest, res, err = self.ctl.call('test')
+        response = self.ctl.call('test')
+        print(response)
 
-        self.assertEqual(dest, 'local')
-        self.assertEqual(res, 'test')
-        self.assertIsNone(err)
+        self.assertEqual(response.kind, 'local')
+        self.assertEqual(response.res, 'test')
+        self.assertIsNone(response.err)
 
     def test_parse_config(self):
         self.p.config.read('./test/test_config.conf')
