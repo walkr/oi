@@ -7,6 +7,24 @@ python library for writing long running processes with a cli interface
 ![oi image](http://i.imgur.com/iH08GNq.png)
 
 
+### Install
+
+Note: You need [nanomsg](https://github.com/nanomsg/nanomsg) installed on your system:
+
+```shell
+$ git clone git@github.com:nanomsg/nanomsg.git
+$ cd nanomsg
+$ ./configure
+$ make
+$ make check
+$ sudo make install
+```
+
+Then install oi
+
+```shell
+$ pip install oi
+```
 
 ### Usage
 
