@@ -10,7 +10,7 @@ class TestOi(unittest.TestCase):
         self.ctl = oi.CtlProgram('programctl', self.address)
 
     def tearDown(self):
-        self.p.service.sock.close()
+        self.p.service.socket.close()
         self.ctl.client.close()
 
     # --------------------------------------

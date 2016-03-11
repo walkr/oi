@@ -153,7 +153,7 @@ class ClientWrapper(object):
 
         def make(addr):
             c = Client(addr)
-            c.sock._set_recv_timeout(timeout)
+            c.socket._set_recv_timeout(timeout)
             return c
 
         if ',' in addr:
@@ -194,7 +194,7 @@ class ClientWrapper(object):
             for client in self.c.values():
                 client.sock.close()
             return
-        self.c.sock.close()
+        self.c.socket.close()
 
 
 class Response(object):
